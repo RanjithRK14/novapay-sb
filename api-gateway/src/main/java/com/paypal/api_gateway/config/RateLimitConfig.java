@@ -2,21 +2,24 @@ package com.paypal.api_gateway.config;
 
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
 
-@Component
+@Configuration
 public class RateLimitConfig {
 
     @Bean
-    public KeyResolver userKeyResolver(){
+    public KeyResolver userKeyResolver() {
         return exchange -> {
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
-            if (userId != null){
-                return Mono.just(userId);
+            if (userId != null && !userId.isBlank()) {
+                return Mono.just("user:" + userId);
             }
-            // fallback via ip address
-            return Mono.just(exchange.getRequest().getRemoteAddress().getAddress().getHostAddress());
+
+            String ip = exchange.getRequest().getRemoteAddress() != null
+                    ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
+                    : "unknown";
+            return Mono.just("ip:" + ip);
         };
     }
 }

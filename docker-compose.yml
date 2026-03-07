@@ -1,4 +1,5 @@
 services:
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.1
     ports:
@@ -19,3 +20,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+
+  # ✅ Redis — required by API Gateway RequestRateLimiter
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no   # disable persistence for dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3

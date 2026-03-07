@@ -23,21 +23,23 @@ public class TransactionServiceImpl implements TransactionService {
     private final KafkaEventProducer kafkaEventProducer;
     private final RestTemplate restTemplate;
 
+    private static final String WALLET_URL = "http://localhost:8083/api/v1/wallets";
+
     @Override
     public Transaction createTransaction(Transaction request) {
 
-        System.out.println("🚀 Entered createTransaction()");
+        System.out.println("🚀 createTransaction() senderId=" + request.getSenderId()
+                + " receiverId=" + request.getReceiverId()
+                + " amount=" + request.getAmount());
 
-        Long senderId = request.getSenderId();
+        Long senderId   = request.getSenderId();
         Long receiverId = request.getReceiverId();
-        Double amount = request.getAmount();
+        Long amount     = request.getAmount();
 
         request.setStatus("PENDING");
         request.setTimestamp(LocalDateTime.now());
 
-        Transaction savedTransaction = repository.save(request);
-
-        String walletServiceUrl = "http://localhost:8083/api/v1/wallets";
+        Transaction saved = repository.save(request);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -47,144 +49,108 @@ public class TransactionServiceImpl implements TransactionService {
         boolean captured = false;
 
         try {
-
-            // Step 1: HOLD sender amount
+            // Step 1: HOLD sender amount (amount as integer, no decimals)
             String holdJson = String.format(
-                    "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %.2f}",
+                    "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %d}",
                     senderId, amount);
 
-            HttpEntity<String> holdEntity = new HttpEntity<>(holdJson, headers);
+            ResponseEntity<String> holdResp = restTemplate.postForEntity(
+                    WALLET_URL + "/hold", new HttpEntity<>(holdJson, headers), String.class);
 
-            ResponseEntity<String> holdResponse =
-                    restTemplate.postForEntity(walletServiceUrl + "/hold", holdEntity, String.class);
-
-            JsonNode holdNode;
-
-            try {
-                holdNode = objectMapper.readTree(holdResponse.getBody());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to parse hold response", e);
-            }
-
+            JsonNode holdNode = objectMapper.readTree(holdResp.getBody());
             holdReference = holdNode.get("holdReference").asText();
-
             System.out.println("🛑 Hold placed: " + holdReference);
 
-            // Step 2: Check receiver wallet exists
-            HttpEntity<?> receiverEntity = new HttpEntity<>(headers);
+            // Step 2: Verify receiver wallet exists
+            ResponseEntity<String> receiverResp = restTemplate.exchange(
+                    WALLET_URL + "/" + receiverId,
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
-            ResponseEntity<String> receiverCheck =
-                    restTemplate.exchange(
-                            walletServiceUrl + "/" + receiverId,
-                            HttpMethod.GET,
-                            receiverEntity,
-                            String.class
-                    );
-
-            if (!receiverCheck.getStatusCode().is2xxSuccessful()) {
-
-                tryReleaseHold(walletServiceUrl, holdReference, headers);
-
-                savedTransaction.setStatus("FAILED");
-                return repository.save(savedTransaction);
+            if (!receiverResp.getStatusCode().is2xxSuccessful()) {
+                tryReleaseHold(holdReference, headers);
+                saved.setStatus("FAILED");
+                return repository.save(saved);
             }
 
-            // Step 3: CAPTURE (debit sender)
+            // Step 3: CAPTURE (debit sender balance)
             String captureJson = String.format("{\"holdReference\":\"%s\"}", holdReference);
+            ResponseEntity<String> captureResp = restTemplate.postForEntity(
+                    WALLET_URL + "/capture", new HttpEntity<>(captureJson, headers), String.class);
 
-            HttpEntity<String> captureEntity = new HttpEntity<>(captureJson, headers);
-
-            ResponseEntity<String> captureResponse =
-                    restTemplate.postForEntity(walletServiceUrl + "/capture", captureEntity, String.class);
-
-            if (!captureResponse.getStatusCode().is2xxSuccessful()) {
-
-                tryReleaseHold(walletServiceUrl, holdReference, headers);
-
-                savedTransaction.setStatus("FAILED");
-                return repository.save(savedTransaction);
+            if (!captureResp.getStatusCode().is2xxSuccessful()) {
+                tryReleaseHold(holdReference, headers);
+                saved.setStatus("FAILED");
+                return repository.save(saved);
             }
 
             captured = true;
+            System.out.println("💸 Sender debited via capture");
 
-            System.out.println("💸 Sender debited");
-
-            // Step 4: Credit receiver
+            // Step 4: CREDIT receiver
             String creditJson = String.format(
-                    "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %.2f}",
+                    "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %d}",
                     receiverId, amount);
 
-            HttpEntity<String> creditEntity = new HttpEntity<>(creditJson, headers);
-
             try {
+                ResponseEntity<String> creditResp = restTemplate.postForEntity(
+                        WALLET_URL + "/credit", new HttpEntity<>(creditJson, headers), String.class);
 
-                ResponseEntity<String> creditResponse =
-                        restTemplate.postForEntity(walletServiceUrl + "/credit", creditEntity, String.class);
-
-                if (!creditResponse.getStatusCode().is2xxSuccessful()) {
+                if (!creditResp.getStatusCode().is2xxSuccessful()) {
                     throw new RuntimeException("Receiver credit failed");
                 }
-
                 System.out.println("💰 Receiver credited");
 
             } catch (Exception ex) {
-
-                System.out.println("❌ Credit failed → refund sender");
-
+                // Credit failed — refund sender
+                System.out.println("❌ Credit failed → refunding sender");
                 String refundJson = String.format(
-                        "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %.2f}",
+                        "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %d}",
                         senderId, amount);
-
-                HttpEntity<String> refundEntity = new HttpEntity<>(refundJson, headers);
-
-                restTemplate.postForEntity(walletServiceUrl + "/credit", refundEntity, String.class);
-
-                savedTransaction.setStatus("FAILED");
-                return repository.save(savedTransaction);
+                restTemplate.postForEntity(
+                        WALLET_URL + "/credit", new HttpEntity<>(refundJson, headers), String.class);
+                saved.setStatus("FAILED");
+                return repository.save(saved);
             }
 
-            savedTransaction.setStatus("SUCCESS");
-            savedTransaction = repository.save(savedTransaction);
+            saved.setStatus("SUCCESS");
+            saved = repository.save(saved);
 
         } catch (HttpClientErrorException ex) {
-
-            System.out.println("❌ Wallet error: " + ex.getResponseBodyAsString());
-
+            System.out.println("❌ Wallet HTTP error: " + ex.getStatusCode()
+                    + " — " + ex.getResponseBodyAsString());
             if (holdReference != null && !captured) {
-                tryReleaseHold(walletServiceUrl, holdReference, headers);
+                tryReleaseHold(holdReference, headers);
             }
+            saved.setStatus("FAILED");
+            saved = repository.save(saved);
 
-            savedTransaction.setStatus("FAILED");
-            savedTransaction = repository.save(savedTransaction);
+        } catch (Exception ex) {
+            System.out.println("❌ Unexpected error: " + ex.getMessage());
+            if (holdReference != null && !captured) {
+                tryReleaseHold(holdReference, headers);
+            }
+            saved.setStatus("FAILED");
+            saved = repository.save(saved);
         }
 
+        // Kafka — non-blocking, failure does not affect response
         try {
-
-            kafkaEventProducer.sendTransactionEvent(
-                    String.valueOf(savedTransaction.getId()),
-                    savedTransaction
-            );
-
+            kafkaEventProducer.sendTransactionEvent(String.valueOf(saved.getId()), saved);
         } catch (Exception e) {
-            System.out.println("Kafka send failed");
+            System.out.println("⚠️ Kafka send failed (non-critical): " + e.getMessage());
         }
 
-        return savedTransaction;
+        return saved;
     }
 
-    private void tryReleaseHold(String walletServiceUrl, String holdReference, HttpHeaders headers) {
-
+    private void tryReleaseHold(String holdReference, HttpHeaders headers) {
         try {
-
-            HttpEntity<?> entity = new HttpEntity<>(headers);
-
             restTemplate.postForEntity(
-                    walletServiceUrl + "/release/" + holdReference,
-                    entity,
-                    String.class
-            );
-
-        } catch (Exception ignored) {
+                    WALLET_URL + "/release/" + holdReference,
+                    new HttpEntity<>(headers), String.class);
+            System.out.println("🔓 Hold released: " + holdReference);
+        } catch (Exception e) {
+            System.out.println("⚠️ Failed to release hold: " + e.getMessage());
         }
     }
 
@@ -193,6 +159,7 @@ public class TransactionServiceImpl implements TransactionService {
         return repository.findById(id).orElse(null);
     }
 
+    @Override
     public List<Transaction> getTransactionsByUser(Long userId) {
         return repository.findBySenderIdOrReceiverId(userId, userId);
     }

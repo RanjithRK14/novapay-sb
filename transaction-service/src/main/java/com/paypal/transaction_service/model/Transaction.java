@@ -23,7 +23,7 @@ public class Transaction {
 
     @Column(nullable = false)
     @Positive(message = "Amount must be positive")
-    private Double amount;
+    private Long amount;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
@@ -33,11 +33,7 @@ public class Transaction {
 
     @PrePersist
     public void prePersist() {
-        if (timestamp == null) {
-            timestamp = LocalDateTime.now();
-        }
-        if (status == null) {
-            status = "PENDING";
-        }
+        if (timestamp == null) timestamp = LocalDateTime.now();
+        if (status == null)    status    = "PENDING";
     }
 }
