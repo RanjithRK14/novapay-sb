@@ -8,5 +8,5 @@ public interface NotificationService {
 
     Notification sendNotification(Notification notification);
 
-    List<Notification> getNotificationsByUserId(String userId);
+    List<Notification> getNotificationsByUserId(Long userId);
 }

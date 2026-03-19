@@ -75,11 +75,10 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 
-		<!-- H2 -->
-		<!-- FIX: was "spring-boot-h2console" (invalid) → h2 driver is all that's needed -->
+		<!-- POSTGRESQL -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 

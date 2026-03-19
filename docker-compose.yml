@@ -1,5 +1,25 @@
 services:
 
+  # ── PostgreSQL ─────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: paypal-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: paypal
+      POSTGRES_PASSWORD: paypal123
+      POSTGRES_DB: userdb          # default db; others created by init script
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paypal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Zookeeper ──────────────────────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.1
     ports:
@@ -8,6 +28,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+  # ── Kafka ──────────────────────────────────────────────────────
   kafka:
     image: confluentinc/cp-kafka:7.4.1
     ports:
@@ -21,14 +42,17 @@ services:
     depends_on:
       - zookeeper
 
-  # ✅ Redis — required by API Gateway RequestRateLimiter
+  # ── Redis (API Gateway rate limiter) ──────────────────────────
   redis:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
-    command: redis-server --save "" --appendonly no   # disable persistence for dev
+    command: redis-server --save "" --appendonly no
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
+
+volumes:
+  postgres_data:
