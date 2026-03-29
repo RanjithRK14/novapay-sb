@@ -1,15 +1,19 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT:10000}
 
 spring:
   application:
     name: transaction-service
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/transactiondb
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/transactiondb?sslmode=require}
     driver-class-name: org.postgresql.Driver
-    username: paypal
-    password: paypal123
+    username: ${SPRING_DATASOURCE_USERNAME:neondb_owner}
+    password: ${SPRING_DATASOURCE_PASSWORD:npg_gVO2FRGBYQ1h}
 
   jpa:
     hibernate:
@@ -20,11 +24,3 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    template:
-      default-topic: transaction-events

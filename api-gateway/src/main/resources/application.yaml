@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:10000}
 
 spring:
   application:
@@ -7,8 +7,7 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      url: ${REDIS_URL:rediss://default:gQAAAAAAAVTkAAIncDI5OTFiMDFkNjRmMTc0MDUxYjBmOTc1ZDYwOTFhM2U4YnAyODcyNjg@dominant-reindeer-87268.upstash.io:6379}
       connect-timeout: 2s
       timeout: 1s
 
@@ -17,7 +16,8 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOriginPatterns: "*"
+            allowedOriginPatterns:
+              - ${FRONTEND_URL:http://localhost:5173}
             allowedMethods: [GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD]
             allowedHeaders: "*"
             allowCredentials: true
@@ -28,33 +28,33 @@ spring:
 
       routes:
         - id: user-service-auth
-          uri: http://localhost:8081
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/auth/**
 
         - id: user-service-api
-          uri: http://localhost:8081
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/users/**
 
         - id: wallet-service
-          uri: http://localhost:8083
+          uri: ${WALLET_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/v1/wallets/**
 
         - id: transaction-service
-          uri: http://localhost:8082
+          uri: ${TRANSACTION_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/transactions/**
 
         - id: reward-service
-          uri: http://localhost:8085
+          uri: ${REWARD_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/rewards/**
 
         # NOTE: controller is @RequestMapping("/api/notify") — NOT /api/notifications
         - id: notification-service
-          uri: http://localhost:8084
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/notify/**
 

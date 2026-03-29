@@ -1,15 +1,15 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:10000}
 
 spring:
   application:
     name: wallet-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/walletdb
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/walletdb?sslmode=require}
     driver-class-name: org.postgresql.Driver
-    username: paypal
-    password: paypal123
+    username: ${SPRING_DATASOURCE_USERNAME:neondb_owner}
+    password: ${SPRING_DATASOURCE_PASSWORD:npg_gVO2FRGBYQ1h}
 
   jpa:
     hibernate:

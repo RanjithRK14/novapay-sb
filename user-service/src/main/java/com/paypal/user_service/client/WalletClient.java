@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "wallet-service",
-        url = "http://localhost:8083"
+        url = "${WALLET_SERVICE_URL:http://localhost:8083}"
 )
 public interface WalletClient {
 

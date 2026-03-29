@@ -1,15 +1,19 @@
 server:
-  port: 8084
+  port: ${SERVER_PORT:10000}
 
 spring:
   application:
     name: notification-service
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/notificationdb
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/notificationdb?sslmode=require}
     driver-class-name: org.postgresql.Driver
-    username: paypal
-    password: paypal123
+    username: ${SPRING_DATASOURCE_USERNAME:neondb_owner}
+    password: ${SPRING_DATASOURCE_PASSWORD:npg_gVO2FRGBYQ1h}
 
   jpa:
     hibernate:
@@ -20,16 +24,3 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: notification-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      properties:
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.value.default.type: com.paypal.notification_service.model.Transaction
-        spring.json.trusted.packages: "*"
-        spring.json.use.type.headers: false

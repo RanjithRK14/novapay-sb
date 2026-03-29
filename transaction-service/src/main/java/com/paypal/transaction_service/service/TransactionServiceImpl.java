@@ -1,5 +1,6 @@
 package com.paypal.transaction_service.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paypal.transaction_service.kafka.KafkaEventProducer;
@@ -23,7 +24,12 @@ public class TransactionServiceImpl implements TransactionService {
     private final KafkaEventProducer kafkaEventProducer;
     private final RestTemplate restTemplate;
 
-    private static final String WALLET_URL = "http://localhost:8083/api/v1/wallets";
+    @Value("${WALLET_SERVICE_URL:http://localhost:8083}")
+    private String walletServiceUrl;
+
+    private String getWalletUrl() {
+        return walletServiceUrl + "/api/v1/wallets";
+    }
 
     @Override
     public Transaction createTransaction(Transaction request) {
@@ -55,7 +61,7 @@ public class TransactionServiceImpl implements TransactionService {
                     senderId, amount);
 
             ResponseEntity<String> holdResp = restTemplate.postForEntity(
-                    WALLET_URL + "/hold", new HttpEntity<>(holdJson, headers), String.class);
+                    getWalletUrl() + "/hold", new HttpEntity<>(holdJson, headers), String.class);
 
             JsonNode holdNode = objectMapper.readTree(holdResp.getBody());
             holdReference = holdNode.get("holdReference").asText();
@@ -63,7 +69,7 @@ public class TransactionServiceImpl implements TransactionService {
 
             // Step 2: Verify receiver wallet exists
             ResponseEntity<String> receiverResp = restTemplate.exchange(
-                    WALLET_URL + "/" + receiverId,
+                    getWalletUrl() + "/" + receiverId,
                     HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
             if (!receiverResp.getStatusCode().is2xxSuccessful()) {
@@ -75,7 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
             // Step 3: CAPTURE (debit sender balance)
             String captureJson = String.format("{\"holdReference\":\"%s\"}", holdReference);
             ResponseEntity<String> captureResp = restTemplate.postForEntity(
-                    WALLET_URL + "/capture", new HttpEntity<>(captureJson, headers), String.class);
+                    getWalletUrl() + "/capture", new HttpEntity<>(captureJson, headers), String.class);
 
             if (!captureResp.getStatusCode().is2xxSuccessful()) {
                 tryReleaseHold(holdReference, headers);
@@ -93,7 +99,7 @@ public class TransactionServiceImpl implements TransactionService {
 
             try {
                 ResponseEntity<String> creditResp = restTemplate.postForEntity(
-                        WALLET_URL + "/credit", new HttpEntity<>(creditJson, headers), String.class);
+                        getWalletUrl() + "/credit", new HttpEntity<>(creditJson, headers), String.class);
 
                 if (!creditResp.getStatusCode().is2xxSuccessful()) {
                     throw new RuntimeException("Receiver credit failed");
@@ -107,7 +113,7 @@ public class TransactionServiceImpl implements TransactionService {
                         "{\"userId\": %d, \"currency\": \"INR\", \"amount\": %d}",
                         senderId, amount);
                 restTemplate.postForEntity(
-                        WALLET_URL + "/credit", new HttpEntity<>(refundJson, headers), String.class);
+                        getWalletUrl() + "/credit", new HttpEntity<>(refundJson, headers), String.class);
                 saved.setStatus("FAILED");
                 return repository.save(saved);
             }
@@ -146,7 +152,7 @@ public class TransactionServiceImpl implements TransactionService {
     private void tryReleaseHold(String holdReference, HttpHeaders headers) {
         try {
             restTemplate.postForEntity(
-                    WALLET_URL + "/release/" + holdReference,
+                    getWalletUrl() + "/release/" + holdReference,
                     new HttpEntity<>(headers), String.class);
             System.out.println("🔓 Hold released: " + holdReference);
         } catch (Exception e) {
