@@ -23,23 +23,19 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         try {
-
             CreateWalletRequest request = new CreateWalletRequest();
             request.setUserId(savedUser.getId());
             request.setCurrency("INR");
 
             walletClient.createWallet(request);
-
             System.out.println("💰 Wallet created for user: " + savedUser.getId());
 
         } catch (Exception ex) {
-
-            userRepository.deleteById(savedUser.getId());
-
-            throw new RuntimeException(
-                    "Wallet creation failed, user rolled back",
-                    ex
-            );
+            // Log the wallet error but DO NOT roll back the user or throw exception.
+            // Wallet creation may fail if wallet-service is sleeping (Render free tier cold start).
+            // The user is already registered — wallet will be created on first login or wallet access.
+            System.err.println("⚠️ Wallet creation failed for user " + savedUser.getId()
+                    + " — user registration still successful. Error: " + ex.getMessage());
         }
 
         return savedUser;
