@@ -27,6 +27,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
+        // Skip JWT check for public endpoints entirely
+        String path = request.getRequestURI();
+        if (path.startsWith("/auth/") || path.equals("/auth")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
@@ -53,6 +60,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 }
             }
         }
+
         chain.doFilter(request, response);
     }
 }

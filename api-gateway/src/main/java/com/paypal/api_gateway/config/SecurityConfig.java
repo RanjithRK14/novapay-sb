@@ -5,13 +5,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
-/**
- * Minimal Spring Security config — all JWT enforcement is done in JwtHeaderForwardingFilter.
- * Spring Security is set to permitAll to avoid interfering with our gateway filter.
- */
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -29,5 +28,15 @@ public class SecurityConfig {
                         .anyExchange().permitAll()
                 )
                 .build();
+    }
+
+    @Bean
+    public MapReactiveUserDetailsService userDetailsService() {
+        UserDetails dummy = User.withDefaultPasswordEncoder()
+                .username("unused")
+                .password("unused")
+                .roles("NONE")
+                .build();
+        return new MapReactiveUserDetailsService(dummy);
     }
 }
