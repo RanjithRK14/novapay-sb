@@ -13,6 +13,9 @@ spring:
 
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 90s
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -57,6 +60,41 @@ spring:
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/notify/**
+
+        - id: user-service-ping
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/ping/user
+          filters:
+            - RewritePath=/ping/user, /ping
+
+        - id: wallet-service-ping
+          uri: ${WALLET_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/ping/wallet
+          filters:
+            - RewritePath=/ping/wallet, /ping
+
+        - id: transaction-service-ping
+          uri: ${TRANSACTION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/ping/transaction
+          filters:
+            - RewritePath=/ping/transaction, /ping
+
+        - id: reward-service-ping
+          uri: ${REWARD_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/ping/reward
+          filters:
+            - RewritePath=/ping/reward, /ping
+
+        - id: notification-service-ping
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/ping/notification
+          filters:
+            - RewritePath=/ping/notification, /ping
 
 logging:
   level:

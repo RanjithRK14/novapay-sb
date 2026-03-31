@@ -29,7 +29,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Skip JWT check for public endpoints entirely
         String path = request.getRequestURI();
-        if (path.startsWith("/auth/") || path.equals("/auth")) {
+        if (path.startsWith("/auth/") || path.equals("/auth") || path.equals("/ping")) {
             chain.doFilter(request, response);
             return;
         }
