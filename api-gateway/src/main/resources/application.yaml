@@ -5,16 +5,15 @@ spring:
   application:
     name: api-gateway-service
 
-  # Redis removed — it caused 429 Too Many Requests by auto-applying
-  # rate limiting that burned through Upstash free-tier quota (10k/day).
-  # Rate limiting is not needed for this project right now.
-
   cloud:
     gateway:
-      # 90s timeout handles Render free-tier cold starts (up to 50s)
+      # Render free-tier cold start times measured from logs:
+      # user-service:        115 seconds to start
+      # transaction-service: 146 seconds to start
+      # So timeout MUST be > 146s. Using 200s to be safe.
       httpclient:
         connect-timeout: 10000
-        response-timeout: 90s
+        response-timeout: 200s
 
       globalcors:
         corsConfigurations:
@@ -65,7 +64,7 @@ spring:
           predicates:
             - Path=/api/notify/**
 
-        # ── Keep-alive ping routes (rewrite /ping/X → /ping on each service) ──
+        # ── Keep-alive ping routes ──────────────────────────────────────
         - id: user-service-ping
           uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
