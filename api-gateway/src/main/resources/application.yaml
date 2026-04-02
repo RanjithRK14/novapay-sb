@@ -5,17 +5,17 @@ spring:
   application:
     name: api-gateway-service
 
-  data:
-    redis:
-      url: ${REDIS_URL:rediss://default:gQAAAAAAAVTkAAIncDI5OTFiMDFkNjRmMTc0MDUxYjBmOTc1ZDYwOTFhM2U4YnAyODcyNjg@dominant-reindeer-87268.upstash.io:6379}
-      connect-timeout: 2s
-      timeout: 1s
+  # Redis removed — it caused 429 Too Many Requests by auto-applying
+  # rate limiting that burned through Upstash free-tier quota (10k/day).
+  # Rate limiting is not needed for this project right now.
 
   cloud:
     gateway:
+      # 90s timeout handles Render free-tier cold starts (up to 50s)
       httpclient:
         connect-timeout: 10000
         response-timeout: 90s
+
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -30,6 +30,7 @@ spring:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
       routes:
+        # ── Auth & User ────────────────────────────────────────────────
         - id: user-service-auth
           uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -40,27 +41,31 @@ spring:
           predicates:
             - Path=/api/users/**
 
+        # ── Wallet ─────────────────────────────────────────────────────
         - id: wallet-service
           uri: ${WALLET_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/v1/wallets/**
 
+        # ── Transactions ───────────────────────────────────────────────
         - id: transaction-service
           uri: ${TRANSACTION_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/transactions/**
 
+        # ── Rewards ────────────────────────────────────────────────────
         - id: reward-service
           uri: ${REWARD_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/rewards/**
 
-        # NOTE: controller is @RequestMapping("/api/notify") — NOT /api/notifications
+        # ── Notifications ──────────────────────────────────────────────
         - id: notification-service
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/notify/**
 
+        # ── Keep-alive ping routes (rewrite /ping/X → /ping on each service) ──
         - id: user-service-ping
           uri: ${USER_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -98,4 +103,4 @@ spring:
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
