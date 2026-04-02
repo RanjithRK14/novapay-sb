@@ -1,0 +1,130 @@
+services:
+  # ── API Gateway ──────────────────────────────────────────────────────────
+  - type: web
+    name: novapay-api-gateway
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: api-gateway
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: USER_SERVICE_URL
+        value: https://novapay-user-service.onrender.com
+      - key: WALLET_SERVICE_URL
+        value: https://novapay-wallet-service.onrender.com
+      - key: TRANSACTION_SERVICE_URL
+        value: https://novapay-transaction-service.onrender.com
+      - key: REWARD_SERVICE_URL
+        value: https://novapay-reward-service.onrender.com
+      - key: NOTIFICATION_SERVICE_URL
+        value: https://novapay-notification-service.onrender.com
+      - key: FRONTEND_URL
+        value: https://novapay-app.netlify.app
+    healthCheckPath: /ping/user
+
+  # ── User Service ─────────────────────────────────────────────────────────
+  - type: web
+    name: novapay-user-service
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: user-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: novapay-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: neondb_owner
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: npg_gVO2FRGBYQ1h
+      - key: JWT_SECRET
+        value: secret123secret123secret123secret123secret123secret123
+      - key: WALLET_SERVICE_URL
+        value: https://novapay-wallet-service.onrender.com
+
+  # ── Wallet Service ───────────────────────────────────────────────────────
+  - type: web
+    name: novapay-wallet-service
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: wallet-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: novapay-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: neondb_owner
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: npg_gVO2FRGBYQ1h
+
+  # ── Transaction Service ──────────────────────────────────────────────────
+  - type: web
+    name: novapay-transaction-service
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: transaction-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: novapay-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: neondb_owner
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: npg_gVO2FRGBYQ1h
+      - key: WALLET_SERVICE_URL
+        value: https://novapay-wallet-service.onrender.com
+
+  # ── Reward Service ───────────────────────────────────────────────────────
+  - type: web
+    name: novapay-reward-service
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: reward-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: novapay-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: neondb_owner
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: npg_gVO2FRGBYQ1h
+
+  # ── Notification Service ─────────────────────────────────────────────────
+  - type: web
+    name: novapay-notification-service
+    runtime: docker
+    repo: https://github.com/RanjithRK14/paypal-clone
+    rootDir: notification-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVER_PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: novapay-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: neondb_owner
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: npg_gVO2FRGBYQ1h
