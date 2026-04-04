@@ -6,6 +6,7 @@ services:
     repo: https://github.com/RanjithRK14/paypal-clone
     rootDir: api-gateway
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /ping/user
     envVars:
       - key: SERVER_PORT
         value: 10000
@@ -21,7 +22,6 @@ services:
         value: https://novapay-notification-service.onrender.com
       - key: FRONTEND_URL
         value: https://novapay-app.netlify.app
-    healthCheckPath: /ping/user
 
   # ── User Service ─────────────────────────────────────────────────────────
   - type: web
@@ -35,9 +35,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: novapay-db
-          property: connectionString
+        value: jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         value: neondb_owner
       - key: SPRING_DATASOURCE_PASSWORD
@@ -59,9 +57,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: novapay-db
-          property: connectionString
+        value: jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         value: neondb_owner
       - key: SPRING_DATASOURCE_PASSWORD
@@ -79,9 +75,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: novapay-db
-          property: connectionString
+        value: jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         value: neondb_owner
       - key: SPRING_DATASOURCE_PASSWORD
@@ -101,9 +95,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: novapay-db
-          property: connectionString
+        value: jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         value: neondb_owner
       - key: SPRING_DATASOURCE_PASSWORD
@@ -121,9 +113,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: novapay-db
-          property: connectionString
+        value: jdbc:postgresql://ep-solitary-paper-a1tufzb5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         value: neondb_owner
       - key: SPRING_DATASOURCE_PASSWORD
