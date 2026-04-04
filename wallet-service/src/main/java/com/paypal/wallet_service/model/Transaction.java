@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "transactions")
+@Table(name = "wallet_transactions")
 public class Transaction {
 
     @Id
