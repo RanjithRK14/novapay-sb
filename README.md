@@ -89,7 +89,7 @@ notification-service
 http://localhost:8080
 ```
 ---
-📂 Project Structure
+## 📂 Project Structure
 ```bash
 api-gateway/
 user-service/
@@ -102,7 +102,7 @@ docker-compose.yml
 
 ---
 
-📈 Key Highlights
+## 📈 Key Highlights
 - Built distributed system with 6 independent microservices
 - Implemented API Gateway and service discovery using Eureka
 - Designed secure JWT-based authentication system
@@ -111,13 +111,13 @@ docker-compose.yml
 
 ---
 
-📌 Future Improvements
+## 📌 Future Improvements
 - Event-driven architecture using Kafka
 - Monitoring with Prometheus and Grafana
 - Caching and rate limiting
 
 ---
 
-**👨‍💻 Author**
+## 👨‍💻 Author
 
 Ranjith Kumar
