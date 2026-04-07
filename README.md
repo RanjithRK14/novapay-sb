@@ -65,21 +65,32 @@ Frontend → API Gateway → Transaction Service → Wallet Service → Response
 
 ## 🐳 Running with Docker
 ```bash
-docker-compose up --build
-⚙️ Local Setup
-Clone repository
+docker-compose up --build 
+```
+
+---
+
+## ⚙️ Local Setup
+
+1. Clone repository
+```bash
 git clone https://github.com/RanjithRK14/novapay-sb.git
-Start Eureka Server
-Start all services:
+```
+2. Start Eureka Server
+3. Start all services:
 user-service
 wallet-service
 transaction-service
 reward-service
 notification-service
-Start API Gateway
-Access APIs:
+4. Start API Gateway
+5. Access APIs:
+```bash
 http://localhost:8080
+```
+---
 📂 Project Structure
+```bash
 api-gateway/
 user-service/
 wallet-service/
@@ -87,16 +98,25 @@ transaction-service/
 reward-service/
 notification-service/
 docker-compose.yml
+```
+
+---
+
 📈 Key Highlights
 Built distributed system with 6 independent microservices
 Implemented API Gateway and service discovery using Eureka
 Designed secure JWT-based authentication system
 Enabled scalable communication using OpenFeign
 Containerized entire application using Docker
+
+---
+
 📌 Future Improvements
 Event-driven architecture using Kafka
 Monitoring with Prometheus and Grafana
 Caching and rate limiting
-👨‍💻 Author
 
+---
+
+👨‍💻 Author
 Ranjith Kumar
