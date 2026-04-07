@@ -118,5 +118,5 @@ docker-compose.yml
 
 ---
 
-👨‍💻 Author
+**👨‍💻 Author**
 Ranjith Kumar
