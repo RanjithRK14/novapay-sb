@@ -103,18 +103,18 @@ docker-compose.yml
 ---
 
 📈 Key Highlights
-Built distributed system with 6 independent microservices
-Implemented API Gateway and service discovery using Eureka
-Designed secure JWT-based authentication system
-Enabled scalable communication using OpenFeign
-Containerized entire application using Docker
+- Built distributed system with 6 independent microservices
+- Implemented API Gateway and service discovery using Eureka
+- Designed secure JWT-based authentication system
+- Enabled scalable communication using OpenFeign
+- Containerized entire application using Docker
 
 ---
 
 📌 Future Improvements
-Event-driven architecture using Kafka
-Monitoring with Prometheus and Grafana
-Caching and rate limiting
+- Event-driven architecture using Kafka
+- Monitoring with Prometheus and Grafana
+- Caching and rate limiting
 
 ---
 
