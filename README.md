@@ -5,6 +5,11 @@ NovaPay is a digital payment platform built using **Spring Boot Microservices Ar
 
 ---
 
+## 🌐 Live Demo
+[https://novapay-app.netlify.app](https://novapay-app.netlify.app)
+
+---
+
 ## 🏗️ Architecture
 The system follows a distributed microservices architecture:
 
